@@ -9,9 +9,15 @@ import { type Categoria, type Gasto } from "../utils/util";
 import { confirmAlert } from "react-confirm-alert";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 
 const Gastos = () => {
+
+    //Filtros
+    const [filtroCategoria, setFiltroCategoria] = useState<string>("");
+    const [filtroMes, setFiltroMes] = useState<string>("");
+
 
     const [categoriaSelecionada, setCategoriaSelecionada] = useState<Categoria | null>(null);
     const [categoria, setCategoria] = useState<Categoria[]>([]);
@@ -22,6 +28,26 @@ const Gastos = () => {
     const handleDateChange = (date: Date | null) => {
         setDataSelecionada(date);
     };
+
+    const gastosFiltrados = gasto.filter((g) => {
+  const data = g.dataGasto as Date;
+  const mesGasto = (data.getMonth() + 1).toString(); // de 1 a 12
+  const categoriaId = g.categoria.id;
+
+  const categoriaOk = !filtroCategoria || filtroCategoria === categoriaId;
+  const mesOk = !filtroMes || filtroMes === mesGasto;
+
+  return categoriaOk && mesOk;
+});
+
+    const dadosGraficoCategoria = categoria.map((c) => {
+  const total = gastosFiltrados
+    .filter((g) => g.categoria.id === c.id)
+    .reduce((acc, g) => acc + g.valor, 0);
+  return { nome: c.nome, total };
+});
+
+
         
     // Callback para exibir a mensagem após a remoção
     const mostrarMensagem = (texto: string, tipo: "success" | "error" | "info" | "warning") => {
@@ -42,6 +68,9 @@ const Gastos = () => {
       toast(texto);
   }
 };
+
+
+
 
 //Carrego os bancos e faturas para popular lista
 useEffect(() => {
@@ -121,75 +150,140 @@ const confirmarRemocao = (item:Gasto) => {
         }
     };
 
+    const totalFiltrado = gastosFiltrados.reduce((acc, g) => acc + g.valor, 0);
 
 return (
-        <Container className="mt-4">
-      <h2 className="text-center mb-4 text-primary fw-bold display-5">
-        <span style={{ fontFamily: 'Poppins, sans-serif', letterSpacing: '1px' }}>💸  Gastos</span>
-      </h2>
-      <Container className="bg-light border rounded p-4 mt-4 shadow-sm">
+  <Container className="mt-4">
+    <h2 className="text-center mb-4 text-primary fw-bold display-5">
+      <span style={{ fontFamily: 'Poppins, sans-serif', letterSpacing: '1px' }}>
+        💸 Gastos
+      </span>
+    </h2>
 
-        <Form>
-          <Form.Group className="mb-3">
-            <Row>
-              <Col xs={12} md={4}>
-                <Form.Label>💸 Categoria</Form.Label>
-                <Form.Select
-                    value={categoriaSelecionada?.id || ""}
-                    onChange={(e) => {
-                    const selecionado = categoria.find((b) => b.id === e.target.value);
-                    if (selecionado) setCategoriaSelecionada(selecionado);
-                    }}
-                >
-                  <option value="">Selecione uma categoria</option>
-                  {categoria.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.nome}
-                    </option>
-                  ))}
-                </Form.Select>
-              </Col>
+    {/* Container de Cadastro */}
+    <Container className="bg-light border rounded p-4 mt-4 shadow-sm">
+      <Form>
+        <Form.Group className="mb-3">
+          <Row>
+            <Col xs={12} md={4}>
+              <Form.Label>💸 Categoria</Form.Label>
+              <Form.Select
+                value={categoriaSelecionada?.id || ""}
+                onChange={(e) => {
+                  const selecionado = categoria.find((b) => b.id === e.target.value);
+                  if (selecionado) setCategoriaSelecionada(selecionado);
+                }}
+              >
+                <option value="">Selecione uma categoria</option>
+                {categoria.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nome}
+                  </option>
+                ))}
+              </Form.Select>
+            </Col>
 
-              <Col xs={12} md={4}>
-                <Form.Label>📊 Valor (R$)</Form.Label>
-                <Form.Control
-                  type="number"
-                  value={valor}
-                  onChange={(e) => setValor(parseFloat(e.target.value))}
-                  placeholder="Ex: 500.00"
-                />
-              </Col>
+            <Col xs={12} md={4}>
+              <Form.Label>📊 Valor (R$)</Form.Label>
+              <Form.Control
+                type="number"
+                value={valor}
+                onChange={(e) => setValor(parseFloat(e.target.value))}
+                placeholder="Ex: 500.00"
+              />
+            </Col>
 
-              <Col xs={12} md={2}>
-                <Form.Label>🗓️ Data</Form.Label>
-                <DatePicker
+            <Col xs={12} md={2}>
+              <Form.Label>🗓️ Data</Form.Label>
+              <DatePicker
                 selected={dataSelecionada}
                 onChange={handleDateChange}
                 dateFormat="dd/MM/yyyy"
                 placeholderText="Selecione uma data"
                 className="form-control"
-                />
+              />
             </Col>
-            </Row>
-          </Form.Group>
-          <Button variant="success" onClick={handleAdicionarGasto}>Adicionar Gasto</Button>
-        </Form>
-      </Container>
+          </Row>
+        </Form.Group>
+        <Button variant="success" onClick={handleAdicionarGasto}>
+          Adicionar Gasto
+        </Button>
+      </Form>
+    </Container>
 
-      <Table striped bordered hover className="mt-4">
-        <thead>
-          <tr>
-            <th>Categoria</th>
-            <th>Valor</th>
-            <th>Data</th>
-          </tr>
-        </thead>
-        <tbody>
-          { [...gasto].sort((a, b) => {
+    {/* Container de Filtros e Gráficos */}
+    <Container className="bg-light border rounded p-4 mt-4 shadow-sm">
+      <Form>
+        <Row className="mb-3">
+  <Col xs={12} md={4}>
+    <Form.Label>📂 Filtrar por Categoria</Form.Label>
+    <Form.Select
+      value={filtroCategoria}
+      onChange={(e) => setFiltroCategoria(e.target.value)}
+    >
+      <option value="">Todas</option>
+      {categoria.map((c) => (
+        <option key={c.id} value={c.id}>{c.nome}</option>
+      ))}
+    </Form.Select>
+  </Col>
+
+  <Col xs={12} md={4}>
+    <Form.Label>🗓️ Filtrar por Mês</Form.Label>
+    <Form.Select
+      value={filtroMes}
+      onChange={(e) => setFiltroMes(e.target.value)}
+    >
+      <option value="">Todos</option>
+      {[...Array(12)].map((_, i) => (
+        <option key={i} value={(i + 1).toString()}>
+          {new Date(0, i).toLocaleString("pt-BR", { month: "long" })}
+        </option>
+      ))}
+    </Form.Select>
+  </Col>
+
+  <Col xs={12} md={4}>
+    <Form.Label>💰 Total Filtrado (R$)</Form.Label>
+    <Form.Control
+      type="text"
+      value={`R$ ${totalFiltrado.toFixed(2)}`}
+      readOnly
+      className="bg-light"
+    />
+  </Col>
+</Row>
+
+      </Form>
+
+      <h5 className="mt-4">Resumo por Categoria</h5>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={dadosGraficoCategoria}>
+          <XAxis dataKey="nome" />
+          <YAxis />
+          <Tooltip />
+          <Bar dataKey="total" fill="#82ca9d" />
+        </BarChart>
+      </ResponsiveContainer>
+    </Container>
+
+    {/* Tabela */}
+    <Table striped bordered hover className="mt-4">
+      <thead>
+        <tr>
+          <th>Categoria</th>
+          <th>Valor</th>
+          <th>Data</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {[...gastosFiltrados]
+          .sort((a, b) => {
             const dataA = (a.dataGasto as Date).getTime();
             const dataB = (b.dataGasto as Date).getTime();
             return dataB - dataA;
-            })
+          })
           .map((item) => (
             <tr key={item.id}>
               <td>{item.categoria.nome}</td>
@@ -198,17 +292,18 @@ return (
               <td className="text-center">
                 <FaTrash
                   className="text-danger"
-                  title="Deletar Fonte"
+                  title="Deletar Gasto"
                   style={{ cursor: "pointer" }}
                   onClick={() => confirmarRemocao(item)}
                 />
               </td>
             </tr>
           ))}
-        </tbody>
-      </Table>
-    </Container>
-  );
+      </tbody>
+    </Table>
+  </Container>
+);
+
 };
 
 export default Gastos;
