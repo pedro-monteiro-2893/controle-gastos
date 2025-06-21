@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { FaTrash } from "react-icons/fa";
+import { FaRedo, FaTrash } from "react-icons/fa";
 import { Container, Form, Button, Table, Row, Col, Tooltip } from "react-bootstrap";
 import { toast } from "react-toastify";
 import "react-confirm-alert/src/react-confirm-alert.css"; // Estilos padrão
@@ -128,6 +128,44 @@ const Investimentos = () => {
                 }
             ]
         });
+    };
+
+
+       const confirmarReentrada = (item: Investimento) => {
+        confirmAlert({
+            title: "Confirmar Repetir o valor do investimento para data de hoje",
+            message: "Deseja realmente repetir a operacao ?",
+            buttons: [
+                {
+                    label: "Sim",
+                    onClick: () => repetirEntrada(item)
+                },
+                {
+                    label: "Cancelar",
+                    onClick: () => console.log("Repetição cancelada")
+                }
+            ]
+        });
+    };
+
+    
+
+    const repetirEntrada = async (item:Investimento) => {
+
+        const novoInvestimento: Investimento = {
+            banco: item.banco,
+            dataRegistro: new Date(),
+            valor: item.valor,
+            tipoInvestimento: item.tipoInvestimento,
+            dataSalvamento: null
+        };
+
+        await adicionarInvestimento(novoInvestimento);
+
+        // Atualizar lista após salvar no Firebase
+        const dadosAtualizados = await buscarInvestimentos();
+        setInvestimento(dadosAtualizados);
+
     };
 
 
@@ -261,7 +299,7 @@ const Investimentos = () => {
 
                 </Form>
 
-                <h5 className="mt-4">Resumo por Data</h5>
+                <h5 className="mt-4">Evolucao Patrimonio Total</h5>
                 <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={dadosGraficoPorData}>
                         <XAxis dataKey="data" />
@@ -314,6 +352,14 @@ const Investimentos = () => {
                                 <td>{item.tipoInvestimento}</td>
                                 <td>R$ {item.valor.toFixed(2)}</td>
                                 <td>{item.dataRegistro.toLocaleDateString("pt-BR")}</td>
+                                <td className="text-center">
+                                    <FaRedo
+                                        className="text-sucess"
+                                        title="Repetir Entrada"
+                                        style={{ cursor: "pointer" }}
+                                        onClick={() => confirmarReentrada(item)}
+                                    />
+                                </td>
                                 <td className="text-center">
                                     <FaTrash
                                         className="text-danger"
