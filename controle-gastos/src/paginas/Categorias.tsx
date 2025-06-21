@@ -4,8 +4,8 @@ import { FaTrash } from "react-icons/fa";
 import { Container, Form, Button, Table, Row, Col} from "react-bootstrap";
 import { toast } from "react-toastify";
 import "react-confirm-alert/src/react-confirm-alert.css"; // Estilos padrão
-import { adicionarCategoria, buscarBancos, buscarCategorias, removerCategoriaDaBase } from "../utils/databaseUtil";
-import type { Banco, Categoria } from "../utils/util";
+import { adicionarCategoria, buscarCategorias, removerCategoriaDaBase } from "../utils/databaseUtil";
+import type { Categoria } from "../utils/util";
 import { confirmAlert } from "react-confirm-alert";
 
 

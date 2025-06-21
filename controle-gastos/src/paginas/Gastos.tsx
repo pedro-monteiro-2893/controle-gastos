@@ -4,19 +4,24 @@ import { FaTrash } from "react-icons/fa";
 import { Container, Form, Button, Table, Row, Col} from "react-bootstrap";
 import { toast } from "react-toastify";
 import "react-confirm-alert/src/react-confirm-alert.css"; // Estilos padrão
-import { adicionarFatura, buscarBancos, buscarFaturas, removerFaturaDaBase } from "../utils/databaseUtil";
-import { anosDisponiveis, mesesDoAno, ordemMeses, type Banco, type Fatura } from "../utils/util";
+import { adicionarGasto, buscarCategorias, buscarGastos, removerGastosDaBase } from "../utils/databaseUtil";
+import { type Categoria, type Gasto } from "../utils/util";
 import { confirmAlert } from "react-confirm-alert";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 
-const Faturas = () => {
+const Gastos = () => {
 
-    const [mesSelecionado, setMesSelecionado] = useState("");
-    const [anoSelecionado, setAnoSelecionado] = useState(0);
-    const [bancoSelecionado, setBancoSelecionado] = useState<Banco | null>(null);
-    const [banco, setBanco] = useState<Banco[]>([]);
+    const [categoriaSelecionada, setCategoriaSelecionada] = useState<Categoria | null>(null);
+    const [categoria, setCategoria] = useState<Categoria[]>([]);
+    const [gasto, setGasto] = useState<Gasto[]>([]);
     const [valor, setValor] = useState(0);
-    const [fatura, setFatura] = useState<Fatura[]>([]);
+    const [dataSelecionada, setDataSelecionada] = useState<Date | null>(null);
+
+    const handleDateChange = (date: Date | null) => {
+        setDataSelecionada(date);
+    };
         
     // Callback para exibir a mensagem após a remoção
     const mostrarMensagem = (texto: string, tipo: "success" | "error" | "info" | "warning") => {
@@ -43,11 +48,11 @@ useEffect(() => {
     const carregarDados = async () => {
       try {
     
-        const bancos = await buscarBancos();
-        setBanco(bancos);
+        const categorias = await buscarCategorias();
+        setCategoria(categorias);
 
-        const faturas = await buscarFaturas();
-        setFatura(faturas);
+        const gastos = await buscarGastos();
+        setGasto(gastos);
 
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
@@ -57,14 +62,14 @@ useEffect(() => {
     carregarDados();
   }, []);
 
-const confirmarRemocao = (item:Fatura) => {
+const confirmarRemocao = (item:Gasto) => {
         confirmAlert({
             title: "Confirmar exclusão",
             message: "Deseja realmente excluir essa fatura?",
             buttons: [
                 {
                     label: "Sim",
-                    onClick: () => removerFatura(item)
+                    onClick: () => removerGasto(item)
                 },
                 {
                     label: "Cancelar",
@@ -75,38 +80,39 @@ const confirmarRemocao = (item:Fatura) => {
     };
 
 
-    const handleAdicionarFatura = async () => {
-        if (!bancoSelecionado ||!mesSelecionado || !anoSelecionado || !valor) return;
+    const handleAdicionarGasto = async () => {
+        if (!categoriaSelecionada ||!dataSelecionada || !valor) return;
 
-        const novaFatura: Fatura = {
-            banco: bancoSelecionado,
-            mes: mesSelecionado,
-            ano: anoSelecionado,
+        const novoGasto: Gasto = {
+            categoria: categoriaSelecionada,
+            dataGasto: dataSelecionada,
             valor:valor,
             dataSalvamento:null
         };
 
-        await adicionarFatura(novaFatura);
+        console.log(novoGasto);
+
+        await adicionarGasto(novoGasto);
 
         // Atualizar lista após salvar no Firebase
-        const dadosAtualizados = await buscarFaturas();
-        setFatura(dadosAtualizados);
+        const dadosAtualizados = await buscarGastos();
+        setGasto(dadosAtualizados);
 
         
     };
 
-    const removerFatura = async (fatura : Fatura) => {
+    const removerGasto = async (gasto : Gasto) => {
         
-        if (!fatura.id) {
+        if (!gasto.id) {
             console.error("Banco sem ID não pode ser removido.");
         return;
         }
  
         try {
-            await removerFaturaDaBase(fatura.id);
+            await removerGastosDaBase(gasto.id);
 
             // Atualiza a lista de fontes na tela removendo o item excluído
-            setBanco((prevFaturas:any) => prevFaturas.filter((f:Fatura) => f.id !== fatura.id));
+            setGasto((prevGastos:any) => prevGastos.filter((f:Gasto) => f.id !== gasto.id));
 
             mostrarMensagem(`Fatura removida com sucesso!`, "success");
         } catch (error) {
@@ -119,7 +125,7 @@ const confirmarRemocao = (item:Fatura) => {
 return (
         <Container className="mt-4">
       <h2 className="text-center mb-4 text-primary fw-bold display-5">
-        <span style={{ fontFamily: 'Poppins, sans-serif', letterSpacing: '1px' }}>📊 Faturas</span>
+        <span style={{ fontFamily: 'Poppins, sans-serif', letterSpacing: '1px' }}>💸  Gastos</span>
       </h2>
       <Container className="bg-light border rounded p-4 mt-4 shadow-sm">
 
@@ -127,18 +133,18 @@ return (
           <Form.Group className="mb-3">
             <Row>
               <Col xs={12} md={4}>
-                <Form.Label>💰 Banco</Form.Label>
+                <Form.Label>💸 Categoria</Form.Label>
                 <Form.Select
-                    value={bancoSelecionado?.id || ""}
+                    value={categoriaSelecionada?.id || ""}
                     onChange={(e) => {
-                    const selecionado = banco.find((b) => b.id === e.target.value);
-                    if (selecionado) setBancoSelecionado(selecionado);
+                    const selecionado = categoria.find((b) => b.id === e.target.value);
+                    if (selecionado) setCategoriaSelecionada(selecionado);
                     }}
                 >
-                  <option value="">Selecione uma fonte</option>
-                  {banco.map((banco) => (
-                    <option key={banco.id} value={banco.id}>
-                      {banco.nome}
+                  <option value="">Selecione uma categoria</option>
+                  {categoria.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.nome}
                     </option>
                   ))}
                 </Form.Select>
@@ -155,61 +161,40 @@ return (
               </Col>
 
               <Col xs={12} md={2}>
-                <Form.Label>🗓️ Mês</Form.Label>
-                <Form.Select
-                  value={mesSelecionado}
-                  onChange={(e) => setMesSelecionado(e.target.value)}
-                >
-                  <option value="">Selecione um mês</option>
-                  {mesesDoAno.map((mes) => (
-                    <option key={mes.id} value={mes.nome}>
-                      {mes.nome}
-                    </option>
-                  ))}
-                </Form.Select>
-              </Col>
-
-              <Col xs={12} md={2}>
-                <Form.Label>🗓️ Ano</Form.Label>
-                <Form.Select
-                  value={anoSelecionado}
-                  onChange={(e) => setAnoSelecionado(parseFloat(e.target.value))}
-                >
-                  <option value="">Ano</option>
-                  {anosDisponiveis.map((ano) => (
-                    <option key={ano.id} value={ano.ano}>
-                      {ano.ano}
-                    </option>
-                  ))}
-                </Form.Select>
-              </Col>
+                <Form.Label>🗓️ Data</Form.Label>
+                <DatePicker
+                selected={dataSelecionada}
+                onChange={handleDateChange}
+                dateFormat="dd/MM/yyyy"
+                placeholderText="Selecione uma data"
+                className="form-control"
+                />
+            </Col>
             </Row>
           </Form.Group>
-          <Button variant="success" onClick={handleAdicionarFatura}>Adicionar Fatura</Button>
+          <Button variant="success" onClick={handleAdicionarGasto}>Adicionar Gasto</Button>
         </Form>
       </Container>
 
       <Table striped bordered hover className="mt-4">
         <thead>
           <tr>
-            <th>Banco</th>
+            <th>Categoria</th>
             <th>Valor</th>
-            <th>Mês</th>
-            <th>Ano</th>
+            <th>Data</th>
           </tr>
         </thead>
         <tbody>
-          { [... fatura].sort((a,b) => 
-          {const dataA = a.ano *100 + ordemMeses[a.mes as keyof typeof ordemMeses];
-           const dataB = b.ano * 100 + ordemMeses[b.mes as keyof typeof ordemMeses];
-           return dataB - dataA;
-          })
+          { [...gasto].sort((a, b) => {
+            const dataA = (a.dataGasto as Date).getTime();
+            const dataB = (b.dataGasto as Date).getTime();
+            return dataB - dataA;
+            })
           .map((item) => (
             <tr key={item.id}>
-              <td>{item.banco.nome}</td>
+              <td>{item.categoria.nome}</td>
               <td>R$ {item.valor.toFixed(2)}</td>
-              <td>{item.mes}</td>
-              <td>{item.ano}</td>
+              <td>{item.dataGasto.toLocaleDateString("pt-BR")}</td>
               <td className="text-center">
                 <FaTrash
                   className="text-danger"
@@ -226,4 +211,4 @@ return (
   );
 };
 
-export default Faturas;
+export default Gastos;

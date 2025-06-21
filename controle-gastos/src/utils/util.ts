@@ -35,6 +35,18 @@ export const mesesDoAno = [
     { id: 12, nome: "Dezembro" },
   ];
 
+
+export const categoriasInvestimento = [
+    { id: 1, nome: "XP" },
+    { id: 2, nome: "Andrezza FGTS" },
+    { id: 3, nome: "Pedro FGTS" },
+    { id: 4, nome: "Caixinha Aline" },
+    { id: 5, nome: "Caixinha Turbo" },
+    { id: 6, nome: "Caixinhas" },
+    { id: 7, nome: "Andrezza IR" },
+  ];
+
+
   export const anosDisponiveis = [
     { id: 3, ano: 2024 },
     { id: 4, ano: 2025 },
@@ -82,6 +94,24 @@ export interface Fatura {
   valor: number;
   mes:string;
   ano:number;
+  dataSalvamento: Timestamp | null;
+}
+
+export interface Gasto {
+  id?: string;
+  categoria: Categoria;
+  valor: number;
+  dataGasto: Date;
+  dataSalvamento: Timestamp | null;
+}
+
+
+export interface Investimento {
+  id?: string;
+  banco: Banco;
+  tipoInvestimento: string;
+  valor: number;
+  dataRegistro: Date;
   dataSalvamento: Timestamp | null;
 }
 

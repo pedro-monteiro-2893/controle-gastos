@@ -6,6 +6,8 @@ import "react-toastify/dist/ReactToastify.css";
 import Bancos from "./paginas/Bancos";
 import Faturas from "./paginas/Fatura";
 import Categorias from "./paginas/Categorias";
+import Gastos from "./paginas/Gastos";
+import Investimentos from "./paginas/Investimentos";
 
 function App() {
 
@@ -29,6 +31,8 @@ function App() {
         <Route path="/bancos" element={<Bancos/>}  />
         <Route path="/faturas" element={<Faturas/>}  />
         <Route path="/categorias" element={<Categorias/>}  />
+        <Route path="/gastos" element={<Gastos/>}  />
+        <Route path="/investimentos" element={<Investimentos/>}  />
       </Routes>
     </Router>
     </>
