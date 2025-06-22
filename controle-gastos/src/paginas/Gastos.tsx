@@ -17,6 +17,8 @@ const Gastos = () => {
     //Filtros
     const [filtroCategoria, setFiltroCategoria] = useState<string>("");
     const [filtroMes, setFiltroMes] = useState<string>("");
+    const [filtroAno, setFiltroAno] = useState<string>("");
+
 
 
     const [categoriaSelecionada, setCategoriaSelecionada] = useState<Categoria | null>(null);
@@ -29,23 +31,45 @@ const Gastos = () => {
         setDataSelecionada(date);
     };
 
-    const gastosFiltrados = gasto.filter((g) => {
-  const data = g.dataGasto as Date;
-  const mesGasto = (data.getMonth() + 1).toString(); // de 1 a 12
+  const gastosFiltrados = gasto.filter((g) => {
+  const data = new Date(g.dataGasto as Date);
+  const mesGasto = (data.getMonth() + 1).toString();
+  const anoGasto = data.getFullYear().toString();
   const categoriaId = g.categoria.id;
 
   const categoriaOk = !filtroCategoria || filtroCategoria === categoriaId;
   const mesOk = !filtroMes || filtroMes === mesGasto;
+  const anoOk = !filtroAno || filtroAno === anoGasto;
 
-  return categoriaOk && mesOk;
+  return categoriaOk && mesOk && anoOk;
 });
 
-    const dadosGraficoCategoria = categoria.map((c) => {
+
+const dadosGraficoCategoria = categoria.map((c) => {
   const total = gastosFiltrados
     .filter((g) => g.categoria.id === c.id)
     .reduce((acc, g) => acc + g.valor, 0);
   return { nome: c.nome, total };
 });
+
+const dadosGraficoMensal = [...Array(12)].map((_, i) => {
+  const mes = i + 1;
+  const total = gasto
+    .filter((g) => {
+      const data = new Date(g.dataGasto as Date);
+      return (
+        (!filtroAno || data.getFullYear().toString() === filtroAno) &&
+        data.getMonth() + 1 === mes
+      );
+    })
+    .reduce((acc, g) => acc + g.valor, 0);
+
+  return {
+    mes: new Date(0, i).toLocaleString("pt-BR", { month: "short" }),
+    total,
+  };
+});
+
 
 
         
@@ -244,6 +268,24 @@ return (
   </Col>
 
   <Col xs={12} md={4}>
+  <Form.Label>📆 Filtrar por Ano</Form.Label>
+  <Form.Select
+    value={filtroAno}
+    onChange={(e) => setFiltroAno(e.target.value)}
+  >
+    <option value="">Todos</option>
+    {[...new Set(gasto.map((g) =>
+      new Date(g.dataGasto as Date).getFullYear()
+    ))].map((ano) => (
+      <option key={ano} value={ano.toString()}>
+        {ano}
+      </option>
+    ))}
+  </Form.Select>
+</Col>
+
+
+  <Col xs={12} md={4}>
     <Form.Label>💰 Total Filtrado (R$)</Form.Label>
     <Form.Control
       type="text"
@@ -266,6 +308,17 @@ return (
         </BarChart>
       </ResponsiveContainer>
     </Container>
+
+    <h5 className="mt-4">Resumo Mensal por Ano</h5>
+<ResponsiveContainer width="100%" height={300}>
+  <BarChart data={dadosGraficoMensal}>
+    <XAxis dataKey="mes" />
+    <YAxis />
+    <Tooltip />
+    <Bar dataKey="total" fill="#8884d8" />
+  </BarChart>
+</ResponsiveContainer>
+
 
     {/* Tabela */}
     <Table striped bordered hover className="mt-4">

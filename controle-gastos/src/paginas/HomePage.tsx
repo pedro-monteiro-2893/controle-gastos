@@ -1,27 +1,31 @@
 import { Row, Col, Container, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
+import passiveIncome from '../assets/passive-income.png';
+import gastosImage from '../assets/carro.png';
+import creditCard from '../assets/credit-card.png';
+import moneyBag from '../assets/money-bag.png'
 
 const HomePage = () => {
 
   const botoes = [
     {
       titulo: "Investimentos",
-      imagem: "/passive-income.png",
+      imagem: passiveIncome,
       link: "/investimentos"
     },
     {
       titulo: "Gastos",
-      imagem: "/carro.png",
+      imagem: gastosImage,
       link: "/gastos"
     },
     {
       titulo: "Faturas",
-      imagem: "/credit-card.png",
+      imagem: creditCard,
       link: "/faturas"
     },
     {
       titulo: "Receitas",
-      imagem: "/money-bag.png",
+      imagem: moneyBag,
       link: "/receitas"
     }
   ];
