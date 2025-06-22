@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { FaRedo, FaTrash } from "react-icons/fa";
-import { Container, Form, Button, Table, Row, Col, Tooltip } from "react-bootstrap";
+import { Container, Form, Button, Table, Row, Col } from "react-bootstrap";
 import { toast } from "react-toastify";
 import "react-confirm-alert/src/react-confirm-alert.css"; // Estilos padrão
 import { adicionarInvestimento, buscarBancos, buscarInvestimentos, removerInvestimentoDaBase } from "../utils/databaseUtil";
@@ -9,7 +9,7 @@ import { categoriasInvestimento, type Banco, type Investimento } from "../utils/
 import { confirmAlert } from "react-confirm-alert";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { format } from "date-fns";
 
 
@@ -88,10 +88,41 @@ const Investimentos = () => {
     }, {});
 
 
-    // Transforma em array para o gráfico
     const dadosGraficoPorData = Object.entries(dadosGraficoLinha)
         .map(([data, { total, rawDate }]) => ({ data, total, rawDate }))
-        .sort((a, b) => a.rawDate.getTime() - b.rawDate.getTime());
+        .sort((a, b) => a.rawDate.getTime() - b.rawDate.getTime())
+        .map((item, index, arr) => ({
+            ...item,
+            anterior: index > 0 ? arr[index - 1].total : 0
+        }));
+
+    const CustomTooltipPatrimonio = ({ active, payload, label }: any) => {
+        if (active && payload && payload.length > 0) {
+            const atual = payload[0].value;
+            const anterior = payload[0].payload.anterior || 0;
+            const diff = atual - anterior;
+
+            const formatador = new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            });
+
+            return (
+                <div className="bg-white border rounded p-2 shadow-sm">
+                    <strong>{label}</strong>
+                    <br />
+                    Patrimônio: <strong>{formatador.format(atual)}</strong>
+                    <br />
+                    Variação: <span style={{ color: diff >= 0 ? 'green' : 'red' }}>
+                        {formatador.format(diff)} {diff >= 0 ? '↑' : '↓'}
+                    </span>
+                </div>
+            );
+        }
+
+        return null;
+    };
+
 
 
     //Carrego os bancos e faturas para popular lista
@@ -131,7 +162,7 @@ const Investimentos = () => {
     };
 
 
-       const confirmarReentrada = (item: Investimento) => {
+    const confirmarReentrada = (item: Investimento) => {
         confirmAlert({
             title: "Confirmar Repetir o valor do investimento para data de hoje",
             message: "Deseja realmente repetir a operacao ?",
@@ -148,9 +179,9 @@ const Investimentos = () => {
         });
     };
 
-    
 
-    const repetirEntrada = async (item:Investimento) => {
+
+    const repetirEntrada = async (item: Investimento) => {
 
         const novoInvestimento: Investimento = {
             banco: item.banco,
@@ -299,33 +330,44 @@ const Investimentos = () => {
 
                 </Form>
 
-                <h5 className="mt-4">Evolucao Patrimonio Total</h5>
+                <h5 className="mt-4">Evolução Patrimônio Total</h5>
                 <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={dadosGraficoPorData}>
                         <XAxis dataKey="data" />
-                        <YAxis />
-                        <Tooltip />
+                        <YAxis
+                            domain={[
+                                (dataMin: number) => Math.floor(dataMin * 0.95),
+                                (dataMax: number) => Math.ceil(dataMax * 1.05)
+                            ]}
+                            tickFormatter={(value) => `R$ ${value.toLocaleString('pt-BR')}`} // formata ticks com R$ e separador de milhar
+                        />
+
+                        <Tooltip content={<CustomTooltipPatrimonio />} />
                         <Line type="monotone" dataKey="total" stroke="#8884d8" strokeWidth={2} />
                     </LineChart>
                 </ResponsiveContainer>
+
+
 
                 <h5 className="mt-5">Evolução por Categoria</h5>
                 <ResponsiveContainer width="100%" height={350}>
                     <LineChart data={dadosGraficoMultilinhas}>
                         <XAxis dataKey="data" />
                         <YAxis />
-                        <Tooltip />
-                        {
-                            categoriasInvestimento.map((c) => (
-                                <Line
-                                    key={c.nome}
-                                    type="monotone"
-                                    dataKey={c.nome}
-                                    strokeWidth={2}
-                                    dot={false}
-                                />
-                            ))
-                        }
+                        <Tooltip
+                            formatter={(value: number, name: string) =>
+                                [`R$ ${value.toFixed(2)}`, name]
+                            }
+                        />
+                        {categoriasInvestimento.map((c) => (
+                            <Line
+                                key={c.nome}
+                                type="monotone"
+                                dataKey={c.nome}
+                                strokeWidth={2}
+                                dot={false}
+                            />
+                        ))}
                     </LineChart>
                 </ResponsiveContainer>
 

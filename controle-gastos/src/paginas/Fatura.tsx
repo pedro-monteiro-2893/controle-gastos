@@ -7,6 +7,7 @@ import "react-confirm-alert/src/react-confirm-alert.css"; // Estilos padrão
 import { adicionarFatura, buscarBancos, buscarFaturas, removerFaturaDaBase } from "../utils/databaseUtil";
 import { anosDisponiveis, mesesDoAno, ordemMeses, type Banco, type Fatura } from "../utils/util";
 import { confirmAlert } from "react-confirm-alert";
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 
 
 const Faturas = () => {
@@ -17,6 +18,8 @@ const Faturas = () => {
     const [banco, setBanco] = useState<Banco[]>([]);
     const [valor, setValor] = useState(0);
     const [fatura, setFatura] = useState<Fatura[]>([]);
+    const [anoGrafico, setAnoGrafico] = useState<number | "">("");
+
         
     // Callback para exibir a mensagem após a remoção
     const mostrarMensagem = (texto: string, tipo: "success" | "error" | "info" | "warning") => {
@@ -115,6 +118,23 @@ const confirmarRemocao = (item:Fatura) => {
         }
     };
 
+    const dadosGraficoMensal = mesesDoAno.map(({ nome }, i) => {
+  const total = fatura
+    .filter((f) => {
+      return (
+        (!anoGrafico || f.ano === anoGrafico) &&
+        f.mes === nome
+      );
+    })
+    .reduce((acc, f) => acc + f.valor, 0);
+
+  return {
+    mes: nome,
+    total
+  };
+});
+
+
 
 return (
         <Container className="mt-4">
@@ -188,6 +208,43 @@ return (
           <Button variant="success" onClick={handleAdicionarFatura}>Adicionar Fatura</Button>
         </Form>
       </Container>
+
+      <Container className="bg-light border rounded p-4 mt-4 shadow-sm">
+  <h5 className="mb-3">📈 Resumo Mensal das Faturas</h5>
+
+  <Form.Group as={Row} className="mb-3">
+    <Col xs={12} md={3}>
+      <Form.Label>📅 Filtrar por Ano</Form.Label>
+      <Form.Select
+        value={anoGrafico}
+        onChange={(e) => {
+          const val = e.target.value;
+          setAnoGrafico(val ? parseInt(val) : "");
+        }}
+      >
+        <option value="">Todos</option>
+        {anosDisponiveis.map((ano) => (
+          <option key={ano.id} value={ano.ano}>
+            {ano.ano}
+          </option>
+        ))}
+      </Form.Select>
+    </Col>
+  </Form.Group>
+
+ <ResponsiveContainer width="100%" height={300}>
+  <BarChart data={dadosGraficoMensal}>
+    <XAxis dataKey="mes" />
+    <YAxis />
+    <Tooltip
+      formatter={(value: number) => [`R$ ${value.toFixed(2)}`, 'Total']}
+    />
+    <Bar dataKey="total" fill="#82ca9d" />
+  </BarChart>
+</ResponsiveContainer>
+
+</Container>
+
 
       <Table striped bordered hover className="mt-4">
         <thead>
