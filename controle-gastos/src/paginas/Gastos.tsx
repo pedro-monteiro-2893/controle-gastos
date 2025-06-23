@@ -147,6 +147,8 @@ const confirmarRemocao = (item:Gasto) => {
 
         await adicionarGasto(novoGasto);
 
+        mostrarMensagem("Gasto adicionado com sucesso","success");
+
         // Atualizar lista após salvar no Firebase
         const dadosAtualizados = await buscarGastos();
         setGasto(dadosAtualizados);
@@ -167,10 +169,10 @@ const confirmarRemocao = (item:Gasto) => {
             // Atualiza a lista de fontes na tela removendo o item excluído
             setGasto((prevGastos:any) => prevGastos.filter((f:Gasto) => f.id !== gasto.id));
 
-            mostrarMensagem(`Fatura removida com sucesso!`, "success");
+            mostrarMensagem(`Gasto removida com sucesso!`, "success");
         } catch (error) {
-            mostrarMensagem("Erro ao remover fatura!", "error");
-            console.error("Erro ao remover fatura:", error);
+            mostrarMensagem("Erro ao remover Gasto!", "error");
+            console.error("Erro ao remover Gasto:", error);
         }
     };
 

@@ -24,9 +24,9 @@ const HomePage = () => {
       link: "/faturas"
     },
     {
-      titulo: "Receitas",
+      titulo: "Categorias",
       imagem: moneyBag,
-      link: "/receitas"
+      link: "/categorias"
     }
   ];
 

@@ -91,6 +91,9 @@ const confirmarRemocao = (item:Fatura) => {
 
         await adicionarFatura(novaFatura);
 
+        mostrarMensagem("Fatura adicionada com sucesso","success");
+
+
         // Atualizar lista após salvar no Firebase
         const dadosAtualizados = await buscarFaturas();
         setFatura(dadosAtualizados);
@@ -118,7 +121,7 @@ const confirmarRemocao = (item:Fatura) => {
         }
     };
 
-    const dadosGraficoMensal = mesesDoAno.map(({ nome }, i) => {
+    const dadosGraficoMensal = mesesDoAno.map(({ nome }) => {
   const total = fatura
     .filter((f) => {
       return (

@@ -162,25 +162,6 @@ const Investimentos = () => {
     };
 
 
-    const confirmarReentrada = (item: Investimento) => {
-        confirmAlert({
-            title: "Confirmar Repetir o valor do investimento para data de hoje",
-            message: "Deseja realmente repetir a operacao ?",
-            buttons: [
-                {
-                    label: "Sim",
-                    onClick: () => repetirEntrada(item)
-                },
-                {
-                    label: "Cancelar",
-                    onClick: () => console.log("Repetição cancelada")
-                }
-            ]
-        });
-    };
-
-
-
     const repetirEntrada = async (item: Investimento) => {
 
         const novoInvestimento: Investimento = {
@@ -192,6 +173,8 @@ const Investimentos = () => {
         };
 
         await adicionarInvestimento(novoInvestimento);
+
+        mostrarMensagem("Investimento adicionada com sucesso","success");
 
         // Atualizar lista após salvar no Firebase
         const dadosAtualizados = await buscarInvestimentos();
@@ -213,6 +196,8 @@ const Investimentos = () => {
 
         await adicionarInvestimento(novoInvestimento);
 
+        mostrarMensagem("Investimento adicionada com sucesso","success");
+
         // Atualizar lista após salvar no Firebase
         const dadosAtualizados = await buscarInvestimentos();
         setInvestimento(dadosAtualizados);
@@ -233,10 +218,10 @@ const Investimentos = () => {
             // Atualiza a lista de fontes na tela removendo o item excluído
             setInvestimento((prevInvestimentos: any) => prevInvestimentos.filter((f: Investimento) => f.id !== investimento.id));
 
-            mostrarMensagem(`Fatura removida com sucesso!`, "success");
+            mostrarMensagem(`Investimento removida com sucesso!`, "success");
         } catch (error) {
-            mostrarMensagem("Erro ao remover fatura!", "error");
-            console.error("Erro ao remover fatura:", error);
+            mostrarMensagem("Erro ao remover Investimento!", "error");
+            console.error("Erro ao remover Investimento:", error);
         }
     };
 
@@ -399,7 +384,7 @@ const Investimentos = () => {
                                         className="text-sucess"
                                         title="Repetir Entrada"
                                         style={{ cursor: "pointer" }}
-                                        onClick={() => confirmarReentrada(item)}
+                                        onClick={() => repetirEntrada(item)}
                                     />
                                 </td>
                                 <td className="text-center">
